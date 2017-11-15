@@ -1,47 +1,61 @@
 {
     "barInfo": [
         {
+            "id":1,
             "name": "选项卡1"
         },
         {
+            "id":2,
             "name": "选项卡2" 
         },
         {
+            "id":3,
             "name": "选项卡3"
         },
         {
+            "id":4,
             "name": "选项卡4"
         },
         {
+            "id":5,
             "name": "选项卡5" 
         },
         {
+            "id":6,
             "name": "选项卡6"
         },
         {
+            "id":7,
             "name": "选项卡7"
         } 
     ],
     "contentInfo": [
         {
+            "id":1,
             "content": "内容1"
         },
         {
+            "id":2,
             "content": "内容2" 
         },
         {
+            "id":3,
             "content": "内容3"
         },
         {
+            "id":4,
             "content": "内容4"
         },
         {
+            "id":5,
             "content": "内容5" 
         },
         {
+            "id":6,
             "content": "内容6"
         },
         {
+            "id":7,
             "content": "内容7"
         }
     ]

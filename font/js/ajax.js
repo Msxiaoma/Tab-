@@ -6,15 +6,12 @@ window.ajax = function (option) {
       if (option.data && method === 'POST') {
         xhr.setRequestHeader('Content-Type', 'application/json')
       }
-      for (let key in (option.headers || {})) {
-        xhr.setRequestHeader(key, option[key])
-      }
       xhr.onload = () => {
         if ((xhr.status + '').startsWith('4') || (xhr.status + '').startsWith('5')) {
           return reject(xhr)
         }
         try {
-          let data = JSON.stringify(xhr.responseText)
+          let data = JSON.parse(xhr.responseText)
           resolve(data)
         } catch (error) {
           reject(error)

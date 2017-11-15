@@ -5,7 +5,20 @@
 body{
     background: #655c89;
 }
-
+.title {
+    width: 800px;
+    margin: 40px auto;
+}
+.sortBtn{
+    padding: 10px 100px;
+    display: inline-block;
+    background: #544F6D;
+    margin-left: 10px;
+    font-size: 16px;
+    color: #fff;
+    cursor: pointer;
+    border-radius: 5px;
+}
 .tab{
     margin: 80px auto;
     width: 800px;
@@ -50,6 +63,8 @@ li span{
     background: #fff;
     width: 800px;
     height: 300px;
+    line-height: 250px;
+    text-align: center;
     display: none; 
 }
 

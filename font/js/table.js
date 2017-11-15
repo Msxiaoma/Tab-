@@ -1,147 +1,210 @@
 function Optsbar(name, num) {
     this.name = name
     this.nums = 1
-    this.messages = ['新建']
-    this.contents = ['这是第一个选项卡']
+
+    this.messages = ['选项卡 0']
+    this.contents = ['面版 0']
+
+
+    this.titleDiv = document.createElement('div')
+    this.titleDiv.className = 'title'
+    document.body.appendChild(this.titleDiv)
+
+    this.sortBtn = document.createElement('div')
+
+    this.tabDiv = document.createElement('div')
+    this.tabDiv.className = 'tab'
+    this.tabDiv.id = this.name
+
+    this.tabUl = document.createElement('ul')
+    this.tabUl.className = 'tab-nav'
 }
 
 Optsbar.prototype = {
-    getBarInfo: function () {
-        //通过ajax请求获取选项卡的标题内容
+    // 通过ajax请求获取相应数量选项卡的面板内容
+    getBarInfo: function (num) {
         ajax({
             url: '/api/getBarInfo',
             method: 'POST',
             data: {
-                num: 3,
-                type: 'Bar'
+                num: num,
+                type: 'bar'
             }
         }).then(data => {
-            console.log(data)
-        })
-    },
-    getContentInfo: function () {
-        //通过ajax请求获取选项卡的面板内容
-    },
-    init: function () {
-        let tabDiv = document.createElement('div')
-        tabDiv.className = 'tab'
-        tabDiv.id = this.name
-
-        let tabUl = document.createElement('ul')
-        tabUl.className = 'tab-nav'
-
-        //新建选项卡选项
-        for (let i = 0; i < this.nums; i++) {
-            let tabLi = document.createElement('li')
-            let tabA = document.createElement('a')
-            let tabSpan = document.createElement('span')
+            this.messages = data
             let self = this
 
-            tabA.setAttribute('href', '#' + this.name + i)
-            tabA.innerText = this.messages[i]
-            tabSpan.innerText = 'x'
-            tabLi.appendChild(tabA)
-            tabLi.appendChild(tabSpan)
-            tabUl.appendChild(tabLi)
+            // 新建排序按钮
 
-            //切换事件
-            tabLi.addEventListener('click', function () {
-                self.bindEvent(this)
+            this.sortBtn.className = 'sortBtn'
+            this.sortBtn.innerText = '排序' + this.name
+
+            this.titleDiv.appendChild(this.sortBtn)
+
+            //新建选项卡选项
+            for (let i = 0; i < this.nums; i++) {
+                let tabLi = document.createElement('li')
+                let tabA = document.createElement('a')
+                let tabSpan = document.createElement('span')
+
+                tabLi.index = i  // 给每一个 li 设置一个索引充当 id 号
+                tabA.setAttribute('href', '#' + this.name + i)
+                tabA.innerText = this.messages[i].name
+                tabSpan.innerText = 'x'
+                tabLi.appendChild(tabA)
+                tabLi.appendChild(tabSpan)
+                this.tabUl.appendChild(tabLi)
+
+                // 切换事件
+                tabLi.addEventListener('click', function () {
+
+                    self.bindEvent(this)
+                })
+
+                // 删除选项卡
+                tabSpan.addEventListener('click', function (e) {
+                    window.event ? window.event.cancelBubble = true : e.stopPropagation()  //阻止事件冒泡
+                    self.removeBar(this)
+                })
+
+            }
+
+            //添加选项卡按钮
+            let tabAdd = document.createElement('li')
+            tabAdd.className = 'addbar'
+            let tabAddText = document.createElement('a')
+            tabAddText.innerText = '+'
+            tabAdd.appendChild(tabAddText)
+            this.tabUl.appendChild(tabAdd)
+
+            tabAdd.addEventListener('click', function () {
+                self.addBar(this)
             })
+            //添加选项卡选项默认样式
+            this.tabUl.firstChild.className = 'nav-active'
 
-            //删除选项卡
-            tabSpan.addEventListener('click', function (e) {
-                window.event ? window.event.cancelBubble = true : e.stopPropagation()  //阻止事件冒泡
-                self.removeBar(this)
+            this.tabDiv.appendChild(this.tabUl)
+
+            this.getContentInfo(this.nums)
+        })
+    },
+
+    // 通过ajax请求获取相应数量的面板内容
+    getContentInfo: function (num) {
+        ajax({
+            url: '/api/getContentInfo',
+            method: 'POST',
+            data: {
+                num: num,
+                type: 'content'
+            }
+        }).then(data => {
+            this.contents = data
+            let self = this
+            for (let i = 0; i < this.nums; i++) {
+                let tabPanel = document.createElement('div')
+                tabPanel.setAttribute('id', this.name + i)
+                tabPanel.innerText = this.contents[i].content
+                this.tabDiv.appendChild(tabPanel)
+            }
+            document.body.appendChild(this.tabDiv)
+
+            //添加选项卡面板默认样式
+            this.tabUl.nextSibling.className = 'tab-active'
+
+            this.sortBtn.addEventListener('click', function () {
+                self.sort()
             })
+        })
+    },
+
+    // 初始化 Tab
+    init: function () {
+        if (arguments.length != 0) {
+            this.nums = arguments[0]
+            this.getBarInfo(this.nums)
+
         }
-        //添加选项卡按钮
-        let tabAdd = document.createElement('li')
-        tabAdd.className = 'addbar'
-        let tabAddText = document.createElement('a')
-        tabAddText.innerText = '+'
-        tabAdd.appendChild(tabAddText)
-        tabUl.appendChild(tabAdd)
-
-        //添加选项卡选项默认样式
-        tabUl.firstChild.className = 'nav-active'
-
-        tabDiv.appendChild(tabUl)
-        for (let i = 0; i < this.nums; i++) {
-            let tabPanel = document.createElement('div')
-            tabPanel.setAttribute('id', this.name + i)
-            tabPanel.innerText = this.contents[i]
-            tabDiv.appendChild(tabPanel)
-        }
-        document.body.appendChild(tabDiv)
-
-        //添加选项卡面板默认样式
-        tabUl.nextSibling.className = 'tab-active'
-
-        this.getBarInfo()
     },
     //选项卡切换事件
     bindEvent: function (curLi) {
-        let table = document.getElementById(this.name)
-        let lists = table.firstChild.children
-        let panelLists = table.getElementsByTagName('div')
-        for (let i = 0; i < lists.length - 1; i++) {
-            lists[i].removeAttribute("class")
-            panelLists[i].removeAttribute("class")
-        }
-        curLi.className = 'nav-active'//此处只显示一个高亮，即选中的那个选项卡  
-        let panelId = curLi.children[0].getAttribute("href").substring(1)
-        let panel = document.getElementById(panelId)
-        panel.className = 'tab-active'
+        ajax({
+            url: '/api/getInfoById',
+            method: 'POST',
+            data: {
+                id: parseInt(curLi.index)
+            }
+        }).then(result => {
+            if (result.stat === 'OK') {
+                let table = document.getElementById(this.name)
+                let lists = table.firstChild.children
+                let panelLists = table.getElementsByTagName('div')
+                for (let i = 0; i < lists.length - 1; i++) {
+                    lists[i].removeAttribute("class")
+                    panelLists[i].removeAttribute("class")
+                }
+                curLi.className = 'nav-active'//此处只显示一个高亮，即选中的那个选项卡  
+                let panelId = curLi.children[0].getAttribute("href").substring(1)
+                let panel = document.getElementById(panelId)
+                panel.innerText = result.data
+                panel.className = 'tab-active'
+            }
+
+        })
+
 
     },
-    addBar: function (title, content) {
-        let table = document.getElementById(this.name)
-        let curUl = table.firstChild
-        let name = this.name
-
-        let addBtn = table.getElementsByClassName('addbar')[0]
-        let index = table.firstChild.children.length
+    addBar: function (addBtn) {
+        let index = this.tabUl.children.length - 1
+        let tabLi = document.createElement('li')
+        tabLi.index = this.tabUl.children.length - 1
+        let tabA = document.createElement('a')
+        let tabSpan = document.createElement('span')
+        let tabPanel = document.createElement('div')
         let self = this
-        addBtn.addEventListener('click', function () {
-            let tabLi = document.createElement('li')
-            let tabA = document.createElement('a')
-            let tabSpan = document.createElement('span')
-            let tabPanel = document.createElement('div')
 
-            tabA.setAttribute('href', '#' + name + index)
-            tabA.innerText = title
-            tabSpan.innerText = 'x'
-            tabPanel.setAttribute('id', name + index)
-            tabPanel.innerText = content
+        tabA.setAttribute('href', '#' + this.name + index)
+        tabA.innerText = '新建 Tab'
+        tabSpan.innerText = 'x'
+        tabPanel.setAttribute('id', this.name + index)
+        tabPanel.innerText = '新建面板'
 
-            tabLi.appendChild(tabA)
-            tabLi.appendChild(tabSpan)
-            curUl.insertBefore(tabLi, addBtn)
-            table.appendChild(tabPanel)
+        tabLi.appendChild(tabA)
+        tabLi.appendChild(tabSpan)
+        this.tabUl.insertBefore(tabLi, addBtn)
+        this.tabDiv.appendChild(tabPanel)
 
-            tabLi.addEventListener('click', function () {
-                self.bindEvent(this)
-            })
+        // 将新建的选项卡和面板添加到 messages 和 contents 中
+        let newBar = {
+            id: parseInt(index + 1),
+            name: '新建 Tab'
+        }
 
-            tabSpan.addEventListener('click', function () {
-                window.event ? window.event.cancelBubble = true : e.stopPropagation()  //阻止事件冒泡
-                self.removeBar(this)
-            })
+        let newPannel = {
+            id: parseInt(index + 1),
+            content: '新建面板'
+        }
+        this.messages.push(newBar)
+        this.contents.push(newPannel)
+
+        tabLi.addEventListener('click', function () {
+            self.bindEvent(this)
+        })
+
+        tabSpan.addEventListener('click', function () {
+            window.event ? window.event.cancelBubble = true : e.stopPropagation()  //阻止事件冒泡
+            self.removeBar(this)
         })
     },
-    /*
-        *  1.阻止事件冒泡行为，防止出发切换事件
-        *  2.若当前选项卡被选中时删除，则选中状态自动切换到第一个选项卡
-        *  3.若当前选项卡未被选中时删除，则该选项面板和选项卡自动删除
-        *  4.如果当前只剩唯一一个选项卡，则删除该选项卡的同时，整个 tab 也被删除
-        */
     removeBar: function (curSpan) {
         let table = document.getElementById(this.name)
         let panelLists = table.getElementsByTagName('div')
         let lists = table.firstChild.children
+        let index = curSpan.parentNode.index - 1  //需要删除的元素的前一个元素的下标
         if (lists.length > 2) {
             if (curSpan.parentNode.className === 'nav-active') {
+                this.messages.splice(index, 1)    // 删除指定位置的元素
+                this.contents.splice(index, 1)
                 table.firstChild.removeChild(curSpan.parentNode)
                 table.firstChild.firstChild.className = 'nav-active'
                 let panelId = curSpan.parentNode.children[0].getAttribute("href").substring(1)
@@ -149,6 +212,8 @@ Optsbar.prototype = {
                 table.removeChild(panel)
                 panelLists[0].className = 'tab-active'
             } else {
+                this.messages.splice(index, 1)
+                this.contents.splice(index, 1)
                 let panelId = curSpan.parentNode.children[0].getAttribute("href").substring(1)
                 let panel = document.getElementById(panelId)
                 table.firstChild.removeChild(curSpan.parentNode)
@@ -161,12 +226,18 @@ Optsbar.prototype = {
 
     // 参数为空时默认为 true ,为正序，为 false 时为逆序
 
-    sortBar: function () {
-        if (arguments.length === 0 || arguments[0] === true) {
-
-        } else {
-
+    sort: function () {
+        let length = this.tabUl.children.length - 1
+        let messageNum = this.messages.length - 1
+        this.messages.reverse()
+        this.contents.reverse()
+        console.log(this.contents)
+        for (let i = 0; i < length; i++) {
+            this.tabUl.children[i].children[0].innerText = this.messages[i].name
+            let panel = document.getElementById(this.name + i)
+            panel.innerText = this.contents[i].content
         }
+
     }
 
 
